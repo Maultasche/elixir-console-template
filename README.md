@@ -1,4 +1,4 @@
-# An Console Application Template
+# An Elixir Console Application Template
 
 This is an Elixir console application template that contains some example math operations functionality. It parses command line arguments to run some simple mathematica operations and contains some example unit tests. It's intended to both provide an example for you to learn from as well as a starting point for building your own Elixir console application.
 
