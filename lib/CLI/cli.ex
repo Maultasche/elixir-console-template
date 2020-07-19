@@ -1,5 +1,5 @@
 defmodule ElixirConsoleTemplate.CLI do
-  alias ElixirConsoleTemplate.Operations
+  alias ElixirConsoleTemplate.CLI.Args
 
   @doc """
   Outputs argument validation errors to standard out
@@ -21,6 +21,10 @@ defmodule ElixirConsoleTemplate.CLI do
     output_usage_info()
   end
 
+  def output_result(result) do
+    IO.puts("The result is #{result}")
+  end
+
   @doc """
   Outputs information to standard out regarding program usage
 
@@ -31,7 +35,7 @@ defmodule ElixirConsoleTemplate.CLI do
   @spec output_usage_info() :: :ok
   def output_usage_info() do
     operations =
-      Operations.valid_operations()
+      Args.valid_operations()
       |> Enum.join(", ")
 
     IO.puts("""

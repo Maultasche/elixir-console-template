@@ -2,16 +2,18 @@ defmodule ElixirConsoleTemplate.CLI.Options do
   @moduledoc """
   Represents a set of command line options
   """
-  defstruct operation: "",
-            operands: []
+  defstruct operation: nil,
+    operands: []
 
+
+  @type operation() :: atom() | String.t() | nil
   # Define the stuct type definition
   @type t :: %ElixirConsoleTemplate.CLI.Options{
-          operation: String.t() | nil,
+          operation: operation(),
           operands: list(number())
         }
 
-  @spec new(String.t(), list(number())) :: ElixirConsoleTemplate.CLI.Options.t()
+  @spec new(operation(), list(number())) :: ElixirConsoleTemplate.CLI.Options.t()
   def new(operation, operands) do
     %ElixirConsoleTemplate.CLI.Options{
       operation: operation,

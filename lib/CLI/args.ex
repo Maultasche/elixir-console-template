@@ -1,5 +1,4 @@
 defmodule ElixirConsoleTemplate.CLI.Args do
-  alias ElixirConsoleTemplate.Operations
   alias ElixirConsoleTemplate.CLI.Options
 
   @type parsed_switches() :: keyword()
@@ -9,7 +8,13 @@ defmodule ElixirConsoleTemplate.CLI.Args do
   @type validation_results() :: parse_results() | {:error, errors()}
   @type errors() :: list(atom())
 
-  @valid_operations Operations.valid_operations()
+  @operations_map %{
+    "add" => :add,
+    "sub" => :subtract,
+    "mult" => :multiply,
+    "div" => :divide
+  }
+  @valid_operations Map.keys(@operations_map) #["add", "sub", "mult", "div"]
 
   @spec parse(list(String.t())) :: parse_results()
   def parse(argv) do
@@ -33,8 +38,11 @@ defmodule ElixirConsoleTemplate.CLI.Args do
     |> validation_result(options)
   end
 
-  @spec validate_operation(list(String.t()), String.t()) :: list(String.t())
-  defp validate_operation(errors, operation) when operation in @valid_operations() do
+  @spec valid_operations() :: list(String.t())
+  def valid_operations(), do: @valid_operations
+
+  @spec validate_operation(list(String.t()), Options.operation()) :: list(String.t())
+  defp validate_operation(errors, operation) when is_atom(operation) do
     errors
   end
 
@@ -50,7 +58,8 @@ defmodule ElixirConsoleTemplate.CLI.Args do
 
   @spec validate_operands(list(String.t()), list(number())) :: list(String.t())
   defp validate_operands(errors, operands) when length(operands) > 1 do
-    errors
+    #Apply validation to each operand
+    Enum.reduce(operands, errors, &validate_operand/2)
   end
 
   defp validate_operands(errors, operands) do
@@ -58,6 +67,14 @@ defmodule ElixirConsoleTemplate.CLI.Args do
 
     [error_message | errors]
   end
+
+  @spec validate_operand(number(), list(String.t())) :: list(String.t())
+  defp validate_operand(nil, errors) do
+    error_message = "One of the operands is not a valid number"
+
+    [error_message | errors]
+  end
+  defp validate_operand(_, errors), do: errors
 
   @spec validation_result(list(String.t()), Options.t()) :: validation_results()
   defp validation_result([], options) do
@@ -81,13 +98,25 @@ defmodule ElixirConsoleTemplate.CLI.Args do
     else
       {:ok,
        Options.new(
-         Keyword.get(parsed_args, :operation),
+         parse_operation(Keyword.get(parsed_args, :operation)),
          parse_operands(additional_args)
        )}
     end
   end
 
-  # Convers a list of arguments to number operands
+  # Converts an argument string to an argument atom
+  # If no equivalent atom can be found, then the string remains as-is
+  @spec parse_operation(String.t() | nil) :: atom() | nil
+  defp parse_operation(nil), do: nil
+  defp parse_operation(operation) do
+    case @operations_map[operation] do
+      nil -> operation
+      operation_atom -> operation_atom
+    end
+  end
+
+
+  # Converts a list of arguments to number operands
   @spec parse_operands(list(String.t())) :: list(number())
   defp parse_operands(args) do
     for arg <- args, do: parse_number(arg)
@@ -96,8 +125,10 @@ defmodule ElixirConsoleTemplate.CLI.Args do
   @spec parse_number(String.t()) :: number() | nil
   defp parse_number(arg) do
     case {Integer.parse(arg), Float.parse(arg)} do
-      {:error, number} -> number
-      {number, :error} -> number
+      {:error, {number, ""}} -> number
+      {{number, _}, :error} -> number
+      {{integer, ""}, {_, ""}} -> integer
+      {_, {float, ""}} -> float
       _ -> nil
     end
   end

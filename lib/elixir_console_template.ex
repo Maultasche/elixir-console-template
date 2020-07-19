@@ -1,7 +1,13 @@
 defmodule ElixirConsoleTemplate do
   alias ElixirConsoleTemplate.CLI
+  alias ElixirConsoleTemplate.Operations
 
-  @operation_functions %{}
+  @operation_functions %{
+    add: &Operations.add/2,
+    subtract: &Operations.subtract/2,
+    multiply: &Operations.multiply/2,
+    divide: &Operations.divide/2
+  }
 
   @moduledoc """
   Documentation for `ElixirConsoleTemplate`.
@@ -26,6 +32,13 @@ defmodule ElixirConsoleTemplate do
   end
 
   def process({:ok, %CLI.Options{operation: operation, operands: operands}}) do
-    IO.puts("Success!")
+    # Select the operations function based on the operation in the command line options
+    operation_func = @operation_functions[operation]
+
+    # Apply the operation
+    result = apply(operation_func, operands)
+
+    # Output the result
+    CLI.output_result(result)
   end
 end
